@@ -16,14 +16,6 @@ const Dashboard: React.FC = () => {
   const [selectedSegment, setSelectedSegment] = useState<string>('all')
   const [segmentData, setSegmentData] = useState<any>(null)
   const [isExporting, setIsExporting] = useState(false)
-  const [cardToggleStates, setCardToggleStates] = useState<{[key: string]: boolean}>({
-    analytics: true,
-    segments: true,
-    export: false,
-    upload: true,
-    breakdown: true,
-  })
-
   // Load initial data
   useEffect(() => {
     actions.loadEngagements()

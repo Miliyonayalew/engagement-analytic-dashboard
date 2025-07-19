@@ -197,6 +197,51 @@ app.get("/api/analytics/segments", (req, res) => {
   });
 });
 
+// Export functionality endpoint (Second Round Addition)
+app.get("/api/export/csv", async (req, res) => {
+  try {
+    const { includeAnalytics = false } = req.query;
+    const engagementData = generateMockEngagementData();
+
+    // Generate CSV content
+    const headers = [
+      "id",
+      "type",
+      "timestamp",
+      "user_id",
+      "engagement_score",
+      "source",
+    ];
+    const csvRows = [headers.join(",")];
+
+    engagementData.forEach((item) => {
+      const row = [
+        item.id,
+        item.type,
+        item.timestamp,
+        item.user_id,
+        item.engagement_score,
+        item.source,
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvContent = csvRows.join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=engagement-data-${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
+    res.send(csvContent);
+  } catch (error) {
+    console.error("Error generating CSV export:", error);
+    res.status(500).json({ error: "Failed to generate export" });
+  }
+});
+
 // Helper functions
 function generateMockEngagementData() {
   return Array.from({ length: 20 }, (_, i) => ({
@@ -249,6 +294,52 @@ function processEngagementData(data, filters) {
   }
 
   return processed.slice(0, parseInt(filters.limit));
+}
+
+function generateAnalytics(data) {
+  const totalEngagements = data.length;
+  const types = data.reduce((acc, item) => {
+    acc[item.type] = (acc[item.type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const avgScore =
+    data.reduce((sum, item) => sum + item.engagement_score, 0) /
+    totalEngagements;
+
+  return {
+    totalEngagements,
+    typeBreakdown: types,
+    averageScore: Math.round(avgScore * 100) / 100,
+    topPerformers: data
+      .sort((a, b) => b.engagement_score - a.engagement_score)
+      .slice(0, 3),
+  };
+}
+
+function cleanAnalyticsData(rawData) {
+  // Clean up common data issues
+  const cleaned = {};
+
+  Object.keys(rawData).forEach((key) => {
+    let value = rawData[key];
+
+    // Trim whitespace
+    if (typeof value === "string") {
+      value = value.trim();
+    }
+
+    // Convert numeric strings to numbers
+    if (!isNaN(value) && value !== "") {
+      value = parseFloat(value);
+    }
+
+    // Clean up key names (remove special characters, standardize casing)
+    const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    cleaned[cleanKey] = value;
+  });
+
+  return cleaned;
 }
 
 app.listen(PORT, () => {

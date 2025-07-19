@@ -239,6 +239,136 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           
+          {/* Row 2: Key Metrics Overview - Full Width */}
+          <div className="metrics-overview-section">
+            <div className="card-header">
+              <h3><i className="fas fa-chart-line"></i> Key Metrics</h3>
+              <button 
+                onClick={() => handleCardToggle('analytics')}
+                className={`card-toggle ${cardToggleStates.analytics ? 'active' : ''}`}
+              >
+                <i className={`fas ${cardToggleStates.analytics ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+              </button>
+            </div>
+            {cardToggleStates.analytics && state.analytics ? (
+              <div className="metrics-grid">
+                <div className="metric-card primary">
+                  <div className="metric-icon">
+                    <i className="fas fa-mouse-pointer"></i>
+                  </div>
+                  <div className="metric-content">
+                    <h4>Total Engagements</h4>
+                    <p className="metric-value">{state.analytics.totalEngagements}</p>
+                    <span className="metric-label">Filtered Results</span>
+                  </div>
+                </div>
+                
+                <div className="metric-card">
+                  <div className="metric-icon">
+                    <i className="fas fa-star"></i>
+                  </div>
+                  <div className="metric-content">
+                    <h4>Average Score</h4>
+                    <p className="metric-value">
+                      {state.analytics.averageScore !== null ? state.analytics.averageScore.toFixed(1) : 'N/A'}
+                    </p>
+                    <span className="metric-label">Engagement Quality</span>
+                  </div>
+                </div>
+                
+                <div className="metric-card">
+                  <div className="metric-icon">
+                    <i className="fas fa-trophy"></i>
+                  </div>
+                  <div className="metric-content">
+                    <h4>Top Performers</h4>
+                    <p className="metric-value">{state.analytics.topPerformers.length}</p>
+                    <span className="metric-label">High Scorers</span>
+                  </div>
+                </div>
+                
+                <div className="metric-card">
+                  <div className="metric-icon">
+                    <i className="fas fa-chart-bar"></i>
+                  </div>
+                  <div className="metric-content">
+                    <h4>Engagement Types</h4>
+                    <p className="metric-value">{Object.keys(state.analytics.typeBreakdown).length}</p>
+                    <span className="metric-label">Active Categories</span>
+                  </div>
+                </div>
+                             </div>
+             ) : cardToggleStates.analytics ? (
+               <div className="metrics-loading">
+                 <i className="fas fa-chart-line"></i>
+                 <p>Loading metrics...</p>
+               </div>
+             ) : null}
+          </div>
+          
+          {/* Row 3: User Segments - Full Width */}
+          <div className="user-segments-section">
+            <div className="card-header">
+              <h3><i className="fas fa-users"></i> User Segments</h3>
+              <button 
+                onClick={() => handleCardToggle('segments')}
+                className={`card-toggle ${cardToggleStates.segments ? 'active' : ''}`}
+              >
+                <i className={`fas ${cardToggleStates.segments ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+              </button>
+            </div>
+            {cardToggleStates.segments && (
+              <div className="segment-selector-row">
+              <div className="segment-buttons">
+                <button 
+                  onClick={() => handleSegmentChange('all')}
+                  className={`segment-btn ${selectedSegment === 'all' ? 'active' : ''}`}
+                >
+                  <i className="fas fa-globe"></i>
+                  <span>All Users</span>
+                </button>
+                <button 
+                  onClick={() => handleSegmentChange('premium')}
+                  className={`segment-btn ${selectedSegment === 'premium' ? 'active' : ''}`}
+                >
+                  <i className="fas fa-crown"></i>
+                  <span>Premium Users</span>
+                </button>
+                <button 
+                  onClick={() => handleSegmentChange('standard')}
+                  className={`segment-btn ${selectedSegment === 'standard' ? 'active' : ''}`}
+                >
+                  <i className="fas fa-user"></i>
+                  <span>Standard Users</span>
+                </button>
+                <button 
+                  onClick={() => handleSegmentChange('new')}
+                  className={`segment-btn ${selectedSegment === 'new' ? 'active' : ''}`}
+                >
+                  <i className="fas fa-user-plus"></i>
+                  <span>New Users</span>
+                </button>
+              </div>
+              
+              {segmentData && (
+                <div className="segment-metrics-inline">
+                  <div className="segment-metric">
+                    <span className="segment-metric-value">{segmentData.data?.totalEngagements || 'N/A'}</span>
+                    <span className="segment-metric-label">Total</span>
+                  </div>
+                  <div className="segment-metric">
+                    <span className="segment-metric-value">{segmentData.data?.averageScore || 'N/A'}</span>
+                    <span className="segment-metric-label">Avg Score</span>
+                  </div>
+                  <div className="segment-metric">
+                    <span className="segment-metric-value">{segmentData.data?.conversionRate || 'N/A'}%</span>
+                    <span className="segment-metric-label">Conversion</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            )}
+          </div>
           
           {/* Row 4: Main Content Area */}
           {/* Left Column - Engagement Data */}
@@ -301,6 +431,109 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           
+          {/* Right Column - Tools & Actions */}
+          <div className="tools-section">
+            {/* CSV Upload */}
+            <div className="upload-card">
+              <div className="card-header">
+                <h4><i className="fas fa-upload"></i> CSV Upload</h4>
+                <button 
+                  onClick={() => handleCardToggle('upload')}
+                  className={`card-toggle ${cardToggleStates.upload ? 'active' : ''}`}
+                >
+                  <i className={`fas ${cardToggleStates.upload ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                </button>
+              </div>
+              {cardToggleStates.upload && (
+              <div className="upload-content">
+                <div className="upload-area">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCSVUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="upload-btn"
+                    disabled={state.loading.isLoading}
+                  >
+                    <i className="fas fa-file-csv"></i> Choose CSV File
+                  </button>
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                      <span className="progress-text">{uploadProgress}%</span>
+                    </div>
+                  )}
+                </div>
+                <div className="upload-help">
+                  <p>Upload CSV with engagement data</p>
+                </div>
+              </div>
+              )}
+            </div>
+            
+            {/* Export Functions */}
+            <div className="export-card">
+              <div className="card-header">
+                <h4><i className="fas fa-download"></i> Export Data</h4>
+                <button 
+                  onClick={() => handleCardToggle('export')}
+                  className={`card-toggle ${cardToggleStates.export ? 'active' : ''}`}
+                >
+                  <i className={`fas ${cardToggleStates.export ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                </button>
+              </div>
+              {cardToggleStates.export && (
+                <div className="export-content">
+                <p>Export filtered engagement data</p>
+                <button 
+                  onClick={handleExportCSV}
+                  className="export-btn"
+                  disabled={isExporting}
+                >
+                  <i className="fas fa-file-csv"></i> 
+                  {isExporting ? 'Exporting...' : 'Export CSV'}
+                </button>
+              </div>
+              )}
+            </div>
+            
+            {/* Type Breakdown */}
+            {state.analytics && (
+              <div className="breakdown-card">
+                <div className="card-header">
+                  <h4><i className="fas fa-chart-pie"></i> Type Breakdown</h4>
+                  <button 
+                    onClick={() => handleCardToggle('breakdown')}
+                    className={`card-toggle ${cardToggleStates.breakdown ? 'active' : ''}`}
+                  >
+                    <i className={`fas ${cardToggleStates.breakdown ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                  </button>
+                </div>
+                {cardToggleStates.breakdown && (
+                  <div className="breakdown-content">
+                  {Object.keys(state.analytics.typeBreakdown).length > 0 ? (
+                    Object.entries(state.analytics.typeBreakdown).map(([type, count]) => (
+                      <div key={type} className="breakdown-item">
+                        <i className={getEngagementIcon(type as EngagementType)}></i>
+                        <span className="breakdown-label">{type}</span>
+                        <span className="breakdown-count">{count}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="no-data-text">No breakdown data available</p>
+                  )}
+                </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </main>
       

@@ -38,7 +38,7 @@ export interface EngagementAnalytics {
   averageScore: number;
   typeBreakdown: Record<EngagementType, number>;
   sourceBreakdown: Record<EngagementSource, number>;
-  topPerformers: EngagementItem[];
+  highestScoringEngagements: EngagementItem[]; // Top 5 interactions by engagement_score
   trendData: TrendDataPoint[];
   scoreDistribution: ScoreDistribution;
 }

@@ -7,6 +7,7 @@ import { apiService } from '../services/api'
 const Dashboard: React.FC = () => {
   const { state, actions } = useDashboard()
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadedFileName, setUploadedFileName] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [localFilters, setLocalFilters] = useState<EngagementFilters>({
     limit: 10,
@@ -61,7 +62,22 @@ const Dashboard: React.FC = () => {
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      setUploadedFileName(file.name)
       actions.uploadCSV(file, setUploadProgress)
+    }
+  }
+
+  // Handle clear uploaded data
+  const handleClearUploadedData = async () => {
+    try {
+      await fetch('/api/engagement/clear-uploaded', { method: 'POST' })
+      setUploadedFileName('')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      actions.refreshData()
+    } catch (error) {
+      console.error('Failed to clear uploaded data:', error)
     }
   }
 
@@ -281,9 +297,9 @@ const Dashboard: React.FC = () => {
                     <i className="fas fa-trophy"></i>
                   </div>
                   <div className="metric-content">
-                    <h4>Top Performers</h4>
-                    <p className="metric-value">{state.analytics.topPerformers.length}</p>
-                    <span className="metric-label">High Scorers</span>
+                                          <h4>Highest Scoring</h4>
+                      <p className="metric-value">{state.analytics.highestScoringEngagements.length}</p>
+                      <span className="metric-label">Top Interactions</span>
                   </div>
                 </div>
                 
@@ -373,7 +389,18 @@ const Dashboard: React.FC = () => {
           {/* Row 4: Main Content Area */}
           {/* Left Column - Engagement Data */}
           <div className="engagement-section">
-            <h3><i className="fas fa-list"></i> Engagement Data</h3>
+            <div className="section-header">
+              <h3><i className="fas fa-list"></i> Engagement Data</h3>
+              <button 
+                onClick={handleExportCSV}
+                className="download-csv-btn"
+                disabled={isExporting || state.loading.isLoading}
+                title="Download current data as CSV"
+              >
+                <i className={isExporting ? 'fas fa-spinner fa-spin' : 'fas fa-download'}></i>
+                {isExporting ? 'Preparing...' : 'Download CSV'}
+              </button>
+            </div>
             {state.error ? (
               <div className="error-message">
                 <i className="fas fa-exclamation-triangle"></i>
@@ -459,7 +486,8 @@ const Dashboard: React.FC = () => {
                     className="upload-btn"
                     disabled={state.loading.isLoading}
                   >
-                    <i className="fas fa-file-csv"></i> Choose CSV File
+                    <i className="fas fa-file-csv"></i> 
+                    {uploadedFileName ? uploadedFileName : 'Choose CSV File'}
                   </button>
                   {uploadProgress > 0 && uploadProgress < 100 && (
                     <div className="progress-bar">
@@ -471,6 +499,18 @@ const Dashboard: React.FC = () => {
                     </div>
                   )}
                 </div>
+                {uploadedFileName && (
+                  <div className="upload-success">
+                    <i className="fas fa-check-circle"></i>
+                    <span>Successfully uploaded: {uploadedFileName}</span>
+                    <button
+                      onClick={handleClearUploadedData}
+                      className="ml-auto text-xs underline hover:no-underline"
+                    >
+                      Clear & use original data
+                    </button>
+                  </div>
+                )}
                 <div className="upload-help">
                   <p>Upload CSV with engagement data</p>
                 </div>
@@ -478,31 +518,6 @@ const Dashboard: React.FC = () => {
               )}
             </div>
             
-            {/* Export Functions */}
-            <div className="export-card">
-              <div className="card-header">
-                <h4><i className="fas fa-download"></i> Export Data</h4>
-                <button 
-                  onClick={() => handleCardToggle('export')}
-                  className={`card-toggle ${cardToggleStates.export ? 'active' : ''}`}
-                >
-                  <i className={`fas ${cardToggleStates.export ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                </button>
-              </div>
-              {cardToggleStates.export && (
-                <div className="export-content">
-                <p>Export filtered engagement data</p>
-                <button 
-                  onClick={handleExportCSV}
-                  className="export-btn"
-                  disabled={isExporting}
-                >
-                  <i className="fas fa-file-csv"></i> 
-                  {isExporting ? 'Exporting...' : 'Export CSV'}
-                </button>
-              </div>
-              )}
-            </div>
             
             {/* Type Breakdown */}
             {state.analytics && (

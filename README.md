@@ -78,7 +78,7 @@ npm install
 ### 📊 **Key Metrics Overview**
 - **Total Engagements**: Real-time count with filtering
 - **Average Score**: Weighted engagement quality metrics
-- **Top Performers**: Highest-scoring user interactions
+- **Highest Scoring Interactions**: Top 5 engagements by score
 - **Engagement Types**: Active category breakdown
 
 ### 👥 **User Segment Analytics**
@@ -96,9 +96,11 @@ npm install
 - **Real-time Updates**: Metrics update instantly with filter changes
 
 ### 📁 **Data Management**
-- **CSV Upload**: Drag-and-drop with progress tracking
-- **Data Cleanup**: Automatic sanitization and validation
+- **CSV Upload**: Drag-and-drop with progress tracking and filename display
+- **Live Data Replacement**: Uploaded CSV data immediately replaces dashboard content
+- **Data Cleanup**: Automatic sanitization and validation with format mapping
 - **CSV Export**: Download filtered data with one click
+- **Clear Uploaded Data**: Revert to original data source with one click
 - **Error Handling**: Comprehensive upload/export error management
 
 ### 🎨 **Professional Interface**
@@ -156,8 +158,19 @@ npm start           # Start production server
 - `GET /api/analytics/segments` - Get user segment analytics
   - Query params: `segment` (all/premium/standard/new)
 
-### Export
+### Data Management
+- `POST /api/engagement/upload` - Upload CSV files (replaces dashboard data)
+- `POST /api/engagement/clear-uploaded` - Clear uploaded data and revert to original
 - `GET /api/export/csv` - Export filtered data as CSV
+
+**Expected CSV Format:**
+```csv
+user_id,type,score,timestamp,source
+user_1001,click,85,2024-01-15T10:30:15Z,web
+user_1002,view,72,2024-01-15T10:31:22Z,mobile
+```
+Supported types: `click, view, share, comment, like, download`  
+Supported sources: `web, mobile, email, social, direct`
 
 ## 🎨 Theme Support
 

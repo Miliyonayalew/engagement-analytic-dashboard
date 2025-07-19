@@ -6,21 +6,17 @@
     <title>Engagement Analytics Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
   </head>
   <body>
-    <div class="container">
+    <div id="app">
       <header class="header">
         <div class="header-content">
           <h1><i class="fas fa-chart-line"></i> Engagement Dashboard</h1>
           <div class="header-controls">
-            <button
-              id="themeToggle"
-              class="theme-toggle"
-              aria-label="Toggle theme"
-            >
+            <button id="themeToggle" class="theme-toggle">
               <i class="fas fa-moon"></i>
             </button>
             <button id="refreshBtn" class="refresh-btn">
@@ -30,16 +26,19 @@
         </div>
       </header>
 
+      <!-- Filters Section -->
       <div class="filters-section">
         <div class="filters-container">
           <div class="filter-group">
             <label for="filterType">Filter by:</label>
             <select id="filterType">
               <option value="">All Types</option>
-              <option value="click">Clicks</option>
-              <option value="view">Views</option>
-              <option value="share">Shares</option>
-              <option value="comment">Comments</option>
+              <option value="click">Click</option>
+              <option value="view">View</option>
+              <option value="share">Share</option>
+              <option value="comment">Comment</option>
+              <option value="like">Like</option>
+              <option value="download">Download</option>
             </select>
           </div>
 
@@ -61,51 +60,25 @@
         </div>
       </div>
 
-      <div class="analytics-overview">
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="metric-content">
-            <h3 id="totalEngagements">-</h3>
-            <p>Total Engagements</p>
-          </div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-star"></i>
-          </div>
-          <div class="metric-content">
-            <h3 id="averageScore">-</h3>
-            <p>Average Score</p>
-          </div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-arrow-up"></i>
-          </div>
-          <div class="metric-content">
-            <h3 id="weeklyGrowth">-</h3>
-            <p>Weekly Growth</p>
-          </div>
-        </div>
-
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-percentage"></i>
-          </div>
-          <div class="metric-content">
-            <h3 id="conversionRate">-</h3>
-            <p>Conversion Rate</p>
-          </div>
+      <!-- Analytics Summary -->
+      <div class="analytics-summary">
+        <div class="metric-cards" id="metricCards">
+          <!-- Will be populated by JavaScript -->
         </div>
       </div>
 
       <div class="main-content">
         <div class="content-section">
-          <h2>Engagement Data</h2>
+          <div class="content-header">
+            <h2><i class="fas fa-list"></i> Engagement Data</h2>
+            <button
+              id="downloadCsvBtn"
+              class="download-csv-btn"
+              title="Download current data as CSV"
+            >
+              <i class="fas fa-download"></i> Download CSV
+            </button>
+          </div>
           <div class="loading-indicator" id="loadingIndicator">
             <i class="fas fa-spinner fa-spin"></i> Loading...
           </div>
@@ -140,7 +113,7 @@
           </div>
 
           <div class="top-performers">
-            <h3>Top Performers</h3>
+            <h3>Highest Scoring Interactions</h3>
             <div id="topPerformers" class="performers-list"></div>
           </div>
         </div>

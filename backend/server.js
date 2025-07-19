@@ -20,6 +20,9 @@ const upload = multer({ dest: "uploads/" });
 // Mock Sam's engagement endpoint URL (would be actual team service in real project)
 const ENGAGEMENT_API_URL = "http://localhost:3001/engagement";
 
+// Store uploaded CSV data in memory (in production, use database)
+let uploadedEngagementData = null;
+
 // Root route for health check
 app.get("/", (req, res) => {
   res.json({
@@ -42,15 +45,22 @@ app.get("/api/engagement", async (req, res) => {
       maxScore,
     } = req.query;
 
-    // Call Sam's original endpoint
+    // Priority order: 1) Uploaded CSV data, 2) Sam's API, 3) Mock data
     let engagementData;
-    try {
-      const response = await axios.get(ENGAGEMENT_API_URL);
-      engagementData = response.data;
-    } catch (error) {
-      // Fallback to mock data if Sam's endpoint is unavailable
-      console.log("Using mock data - Sam's endpoint unavailable");
-      engagementData = generateMockEngagementData();
+    if (uploadedEngagementData && uploadedEngagementData.length > 0) {
+      // Use uploaded CSV data as primary source
+      console.log("Using uploaded CSV data");
+      engagementData = uploadedEngagementData;
+    } else {
+      try {
+        // Call Sam's original endpoint
+        const response = await axios.get(ENGAGEMENT_API_URL);
+        engagementData = response.data;
+      } catch (error) {
+        // Fallback to mock data if Sam's endpoint is unavailable
+        console.log("Using mock data - Sam's endpoint unavailable");
+        engagementData = generateMockEngagementData();
+      }
     }
 
     // Apply filters and enhancements
@@ -102,6 +112,9 @@ app.post("/api/engagement/upload", upload.single("csvFile"), (req, res) => {
     .pipe(csv())
     .on("data", (data) => results.push(cleanAnalyticsData(data)))
     .on("end", () => {
+      // Store processed data as the primary data source
+      uploadedEngagementData = results;
+
       // Clean up uploaded file
       fs.unlinkSync(filePath);
 
@@ -109,12 +122,23 @@ app.post("/api/engagement/upload", upload.single("csvFile"), (req, res) => {
         message: "CSV processed successfully",
         processed: results.length,
         sample: results.slice(0, 5),
+        dataSource: "csv_upload", // Indicate data source changed
       });
     })
     .on("error", (error) => {
       console.error("CSV processing error:", error);
       res.status(500).json({ error: "Failed to process CSV" });
     });
+});
+
+// Clear uploaded CSV data endpoint
+app.post("/api/engagement/clear-uploaded", (req, res) => {
+  uploadedEngagementData = null;
+  console.log("Cleared uploaded CSV data - reverting to original data source");
+  res.json({
+    message: "Uploaded data cleared successfully",
+    dataSource: "reverted_to_original",
+  });
 });
 
 // Analytics summary endpoint
@@ -311,33 +335,45 @@ function generateAnalytics(data) {
     totalEngagements,
     typeBreakdown: types,
     averageScore: Math.round(avgScore * 100) / 100,
-    topPerformers: data
+    highestScoringEngagements: data
       .sort((a, b) => b.engagement_score - a.engagement_score)
-      .slice(0, 3),
+      .slice(0, 5), // Top 5 interactions by engagement_score
   };
 }
 
 function cleanAnalyticsData(rawData) {
-  // Clean up common data issues
-  const cleaned = {};
+  // Clean up and map CSV data to expected engagement format
+  const cleaned = {
+    id: rawData.id || rawData.user_id || Math.floor(Math.random() * 10000),
+    type: (rawData.type || rawData.engagement_type || "view")
+      .toString()
+      .toLowerCase()
+      .trim(),
+    timestamp: rawData.timestamp || new Date().toISOString(),
+    user_id: (
+      rawData.user_id ||
+      rawData.userId ||
+      `user_${Math.floor(Math.random() * 1000)}`
+    ).toString(),
+    engagement_score: parseFloat(
+      rawData.score ||
+        rawData.engagement_score ||
+        Math.floor(Math.random() * 100)
+    ),
+    source: (rawData.source || "web").toString().toLowerCase().trim(),
+  };
 
-  Object.keys(rawData).forEach((key) => {
-    let value = rawData[key];
+  // Ensure valid engagement types
+  const validTypes = ["click", "view", "share", "comment", "like", "download"];
+  if (!validTypes.includes(cleaned.type)) {
+    cleaned.type = "view"; // Default fallback
+  }
 
-    // Trim whitespace
-    if (typeof value === "string") {
-      value = value.trim();
-    }
-
-    // Convert numeric strings to numbers
-    if (!isNaN(value) && value !== "") {
-      value = parseFloat(value);
-    }
-
-    // Clean up key names (remove special characters, standardize casing)
-    const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    cleaned[cleanKey] = value;
-  });
+  // Ensure valid sources
+  const validSources = ["web", "mobile", "email", "social", "direct"];
+  if (!validSources.includes(cleaned.source)) {
+    cleaned.source = "web"; // Default fallback
+  }
 
   return cleaned;
 }

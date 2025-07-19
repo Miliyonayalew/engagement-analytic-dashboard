@@ -28,34 +28,46 @@
     @apply card p-6 hover:shadow-lg transition-shadow duration-200;
   }
   
-  .engagement-card {
-    @apply card p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700;
-  }
-  
   .loading-spinner {
-    @apply flex items-center justify-center w-full h-full min-h-[4rem];
-  }
-  .loading-spinner .spinner {
-    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
-  }
-  
-  .error-message {
-    @apply bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg;
-  }
-  
-  .success-message {
-    @apply bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded-lg;
+    @apply inline-block w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin;
   }
 }
 
-/* Dark mode transitions */
-* {
-  @apply transition-colors duration-200;
+/* Section header with download button */
+.section-header {
+  @apply flex items-center justify-between mb-4;
 }
 
-/* Scrollbar styles */
+.section-header h3 {
+  @apply text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2;
+}
+
+.download-csv-btn {
+  @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 
+         focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+         disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow-md;
+}
+
+.download-csv-btn:hover:not(:disabled) {
+  @apply transform -translate-y-0.5 shadow-lg;
+}
+
+.download-csv-btn i {
+  @apply text-sm;
+}
+
+/* Upload success indicator */
+.upload-success {
+  @apply flex items-center gap-2 mt-2 p-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 rounded-lg text-sm;
+}
+
+.upload-success i {
+  @apply text-green-600 dark:text-green-400;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  @apply w-2;
 }
 
 ::-webkit-scrollbar-track {

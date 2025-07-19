@@ -469,7 +469,7 @@ body {
 
 .loading-indicator i {
   margin-right: 0.5rem;
-  animation: spin 1s linear infinite;
+  /* animation: spin 1s linear infinite; */
 }
 
 .no-data {

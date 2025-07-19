@@ -252,7 +252,7 @@ const Dashboard: React.FC = () => {
             </div>
             {cardToggleStates.analytics && state.analytics ? (
               <div className="metrics-grid">
-                <div className="metric-card primary">
+                <div className="metric-card">
                   <div className="metric-icon">
                     <i className="fas fa-mouse-pointer"></i>
                   </div>

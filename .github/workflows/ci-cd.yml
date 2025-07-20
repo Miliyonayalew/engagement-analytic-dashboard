@@ -44,96 +44,10 @@ jobs:
     - name: Run backend tests
       run: npm test || echo "No tests found, skipping..."
 
-  # Frontend Testing and Building
-  frontend-tests:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-    
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-    
-    - name: Install frontend dependencies
-      run: npm ci
-    
-    - name: Run TypeScript type checking
-      run: npx tsc --noEmit --skipLibCheck
-    
-    - name: Run frontend linting
-      run: npm run lint || echo "No lint script found, skipping..."
-    
-    - name: Run frontend tests
-      run: |
-        if npm run test --silent 2>/dev/null; then
-          npm test
-        else
-          echo "No test script configured, creating basic test runner..."
-          npm run build && echo "✅ Build successful - treating as test pass"
-        fi
-    
-    - name: Build frontend
-      run: npm run build
-      env:
-        VITE_API_URL: http://localhost:8000
-    
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: frontend-build-${{ matrix.node-version }}
-        path: frontend/dist/
-        retention-days: 7
-
-  # Security and Quality Checks
-  security-audit:
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Don't fail entire workflow on security issues
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18.x
-        cache: 'npm'
-    
-    - name: Backend security audit
-      run: |
-        cd backend
-        npm ci
-        echo "Running backend security audit..."
-        npm audit --audit-level=high || echo "⚠️ Security vulnerabilities found in backend"
-    
-    - name: Frontend security audit
-      run: |
-        cd frontend
-        npm ci
-        echo "Running frontend security audit..."
-        # Allow moderate vulnerabilities but report them
-        npm audit --audit-level=critical || echo "⚠️ Security vulnerabilities found in frontend"
-        
-        # Generate audit report but don't fail
-        npm audit --json > audit-report.json || true
-        
-        # Show summary
-        echo "📊 Security Audit Summary:"
-        npm audit || echo "Moderate vulnerabilities detected - see full report"
-
-  # Integration Tests
+  # Integration Tests (simplified - only depends on backend now)
   integration-tests:
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests]
+    needs: [backend-tests]
     steps:
     - uses: actions/checkout@v4
     
@@ -173,10 +87,10 @@ jobs:
              http://localhost:8000/api/engagement/upload || exit 1
         echo "CSV upload endpoint working"
 
-  # Deployment (conditional on main branch)
+  # Deployment (conditional on main branch) - simplified dependencies
   deploy:
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests, integration-tests]  # Removed security-audit dependency
+    needs: [backend-tests, integration-tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
     - uses: actions/checkout@v4

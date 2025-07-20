@@ -1,0 +1,42 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quick-validation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Install backend dependencies
+      run: cd backend && npm ci
+    
+    - name: Install frontend dependencies  
+      run: cd frontend && npm ci
+    
+    - name: TypeScript type checking
+      run: cd frontend && npx tsc --noEmit
+    
+    - name: Build frontend
+      run: cd frontend && npm run build
+    
+    - name: Backend syntax check
+      run: cd backend && node -c server.js
+    
+    - name: Quick API test
+      run: |
+        cd backend
+        timeout 30s npm start &
+        sleep 10
+        curl -f http://localhost:8000 && echo "✅ Backend is responsive"
+    
+    - name: PR validation complete
+      run: echo "🎉 PR validation passed! Ready for review." 

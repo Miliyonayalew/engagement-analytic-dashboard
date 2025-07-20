@@ -1,0 +1,130 @@
+name: Security Monitoring
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        cd backend && npm ci
+        cd ../frontend && npm ci
+    
+    - name: Backend security audit
+      run: |
+        cd backend
+        npm audit --json > backend-audit.json || true
+        
+    - name: Frontend security audit  
+      run: |
+        cd frontend
+        npm audit --json > frontend-audit.json || true
+    
+    - name: Check for high/critical vulnerabilities
+      run: |
+        echo "🔍 Checking for critical vulnerabilities..."
+        
+        BACKEND_CRITICAL=$(cd backend && npm audit --audit-level=critical --json | jq '.metadata.vulnerabilities.critical // 0')
+        FRONTEND_CRITICAL=$(cd frontend && npm audit --audit-level=critical --json | jq '.metadata.vulnerabilities.critical // 0')
+        
+        echo "Backend critical vulnerabilities: $BACKEND_CRITICAL"
+        echo "Frontend critical vulnerabilities: $FRONTEND_CRITICAL"
+        
+        if [ "$BACKEND_CRITICAL" -gt 0 ] || [ "$FRONTEND_CRITICAL" -gt 0 ]; then
+          echo "❌ Critical vulnerabilities found!"
+          exit 1
+        else
+          echo "✅ No critical vulnerabilities detected"
+        fi
+    
+    - name: Generate dependency report
+      run: |
+        echo "# Dependency Security Report" > security-report.md
+        echo "Generated: $(date)" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## Backend Dependencies" >> security-report.md
+        cd backend && npm ls --depth=0 >> ../security-report.md
+        
+        echo "" >> ../security-report.md
+        echo "## Frontend Dependencies" >> security-report.md
+        cd ../frontend && npm ls --depth=0 >> ../security-report.md
+        
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report-${{ github.run_number }}
+        path: |
+          security-report.md
+          backend/backend-audit.json
+          frontend/frontend-audit.json
+        retention-days: 30
+
+  dependency-updates:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Check for outdated packages
+      run: |
+        echo "📦 Checking for outdated packages..."
+        
+        cd backend
+        npm outdated --json > ../backend-outdated.json || true
+        
+        cd ../frontend  
+        npm outdated --json > ../frontend-outdated.json || true
+        
+        echo "Backend outdated packages:"
+        cat ../backend-outdated.json
+        
+        echo "Frontend outdated packages:"
+        cat ../frontend-outdated.json
+    
+    - name: Create dependency update summary
+      run: |
+        echo "# Dependency Update Summary" > dependency-summary.md
+        echo "Generated: $(date)" >> dependency-summary.md
+        echo "" >> dependency-summary.md
+        
+        if [ -s backend-outdated.json ] && [ "$(cat backend-outdated.json)" != "{}" ]; then
+          echo "## Backend Updates Available" >> dependency-summary.md
+          echo '```json' >> dependency-summary.md
+          cat backend-outdated.json >> dependency-summary.md
+          echo '```' >> dependency-summary.md
+        fi
+        
+        if [ -s frontend-outdated.json ] && [ "$(cat frontend-outdated.json)" != "{}" ]; then
+          echo "## Frontend Updates Available" >> dependency-summary.md
+          echo '```json' >> dependency-summary.md  
+          cat frontend-outdated.json >> dependency-summary.md
+          echo '```' >> dependency-summary.md
+        fi
+    
+    - name: Upload dependency report
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-report-${{ github.run_number }}
+        path: dependency-summary.md
+        retention-days: 30 

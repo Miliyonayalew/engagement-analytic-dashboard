@@ -69,7 +69,6 @@ npm install
 ```
 
 ## 🌐 Access URLs
-
 - **Frontend (React)**: http://localhost:8000
 - **Backend API**: http://localhost:3000
 

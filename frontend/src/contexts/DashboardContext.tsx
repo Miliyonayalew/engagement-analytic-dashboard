@@ -26,7 +26,7 @@ type DashboardAction =
   | { type: 'SET_FILTERS'; payload: EngagementFilters }
   | { type: 'TOGGLE_THEME' }
   | { type: 'SET_THEME'; payload: ThemeState }
-  | { type: 'ADD_NOTIFICATION'; payload: NotificationMessage }
+  | { type: 'ADD_NOTIFICATION'; payload: Omit<NotificationMessage, 'id' | 'timestamp'> }
   | { type: 'REMOVE_NOTIFICATION'; payload: string }
   | { type: 'UPDATE_LAST_UPDATED' }
   | { type: 'RESET_STATE' };

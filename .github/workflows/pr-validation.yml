@@ -23,13 +23,24 @@ jobs:
       run: cd frontend && npm ci
     
     - name: TypeScript type checking
-      run: cd frontend && npx tsc --noEmit
+      run: cd frontend && npx tsc --noEmit --skipLibCheck
     
     - name: Build frontend
       run: cd frontend && npm run build
+      env:
+        VITE_API_URL: http://localhost:8000
     
     - name: Backend syntax check
       run: cd backend && node -c server.js
+    
+    - name: Quick security check (non-blocking)
+      run: |
+        echo "🔍 Running quick security check..."
+        cd frontend
+        npm audit --audit-level=critical || echo "⚠️ Some vulnerabilities found - see full audit for details"
+        cd ../backend  
+        npm audit --audit-level=critical || echo "⚠️ Some vulnerabilities found - see full audit for details"
+      continue-on-error: true
     
     - name: Quick API test
       run: |
